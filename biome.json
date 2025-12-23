@@ -7,16 +7,16 @@
       "recommended": true,
       "correctness": {
         "noUnusedImports": "error",
-        "noUnusedVariables": "warn"
+        "noUnusedVariables": "error"
       },
       "suspicious": {
         "noTemplateCurlyInString": "off",
         "noControlCharactersInRegex": "off",
-        "noImplicitAnyLet": "warn",
-        "noAssignInExpressions": "warn"
+        "noImplicitAnyLet": "error",
+        "noAssignInExpressions": "error"
       },
       "style": {
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "error"
       }
     }
   },

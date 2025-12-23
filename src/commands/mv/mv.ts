@@ -26,7 +26,7 @@ export const mvCommand: Command = {
       };
     }
 
-    const dest = paths.pop()!;
+    const dest = paths.pop() ?? "";
     const sources = paths;
     const destPath = ctx.fs.resolvePath(ctx.cwd, dest);
 

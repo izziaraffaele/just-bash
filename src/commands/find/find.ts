@@ -305,12 +305,13 @@ export const findCommand: Command = {
         return;
       }
 
-      let stat;
+      let stat: Awaited<ReturnType<typeof ctx.fs.stat>> | undefined;
       try {
         stat = await ctx.fs.stat(currentPath);
       } catch {
         return;
       }
+      if (!stat) return;
 
       // For the starting directory, use the search path itself as the name
       // (e.g., when searching from '.', the name should be '.')

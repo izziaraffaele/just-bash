@@ -49,7 +49,7 @@ export const basenameCommand: Command = {
 
     // If not multiple mode, second arg is suffix
     if (!multiple && names.length >= 2) {
-      suffix = names.pop()!;
+      suffix = names.pop() ?? "";
     }
 
     const results: string[] = [];

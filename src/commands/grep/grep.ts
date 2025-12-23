@@ -412,8 +412,11 @@ function grepContent(
       if (onlyMatching) {
         // Output only the matched parts
         regex.lastIndex = 0;
-        let match;
-        while ((match = regex.exec(line)) !== null) {
+        for (
+          let match = regex.exec(line);
+          match !== null;
+          match = regex.exec(line)
+        ) {
           let outputLine = match[0];
           if (filename) {
             outputLine = `${filename}:${outputLine}`;

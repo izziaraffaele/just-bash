@@ -229,15 +229,15 @@ export const sedCommand: Command = {
           lineStart === undefined ||
           (lineNum >= lineStart && lineNum <= (lineEnd ?? lineStart));
 
-        if (sedCmd.type === "substitute" && inRange) {
+        if (sedCmd.type === "substitute" && inRange && sedCmd.pattern) {
           let flags = "";
           if (sedCmd.global) flags += "g";
           if (sedCmd.ignoreCase) flags += "i";
-          const regex = new RegExp(sedCmd.pattern!, flags);
+          const regex = new RegExp(sedCmd.pattern, flags);
 
           // Handle & replacement
           line = line.replace(regex, (match) =>
-            processReplacement(sedCmd.replacement!, match),
+            processReplacement(sedCmd.replacement ?? "", match),
           );
         } else if (sedCmd.type === "delete") {
           if (sedCmd.addressPattern) {
@@ -315,13 +315,13 @@ export const sedCommand: Command = {
               lineStart === undefined ||
               (lineNum >= lineStart && lineNum <= (lineEnd ?? lineStart));
 
-            if (sedCmd.type === "substitute" && inRange) {
+            if (sedCmd.type === "substitute" && inRange && sedCmd.pattern) {
               let flags = "";
               if (sedCmd.global) flags += "g";
               if (sedCmd.ignoreCase) flags += "i";
-              const regex = new RegExp(sedCmd.pattern!, flags);
+              const regex = new RegExp(sedCmd.pattern, flags);
               line = line.replace(regex, (match) =>
-                processReplacement(sedCmd.replacement!, match),
+                processReplacement(sedCmd.replacement ?? "", match),
               );
             } else if (sedCmd.type === "delete") {
               if (sedCmd.addressPattern) {

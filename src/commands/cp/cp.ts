@@ -32,7 +32,7 @@ export const cpCommand: Command = {
       };
     }
 
-    const dest = paths.pop()!;
+    const dest = paths.pop() ?? "";
     const sources = paths;
     const destPath = ctx.fs.resolvePath(ctx.cwd, dest);
 

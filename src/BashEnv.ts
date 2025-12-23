@@ -880,12 +880,14 @@ export class BashEnv {
       this.callDepth--;
 
       // Pop the local scope and restore shadowed variables
-      const localScope = this.localScopes.pop()!;
-      for (const [varName, originalValue] of localScope) {
-        if (originalValue === undefined) {
-          delete this.env[varName];
-        } else {
-          this.env[varName] = originalValue;
+      const localScope = this.localScopes.pop();
+      if (localScope) {
+        for (const [varName, originalValue] of localScope) {
+          if (originalValue === undefined) {
+            delete this.env[varName];
+          } else {
+            this.env[varName] = originalValue;
+          }
         }
       }
 

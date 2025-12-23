@@ -152,9 +152,12 @@ function convertArgs(format: string, args: string[]): (string | number)[] {
 
   // Match format specifiers: %[flags][width][.precision][length]specifier
   const specifierRegex = /%[-+0 #]*\d*(?:\.\d+)?[hlL]?([diouxXeEfFgGaAcspn%])/g;
-  let match;
 
-  while ((match = specifierRegex.exec(format)) !== null) {
+  for (
+    let match = specifierRegex.exec(format);
+    match !== null;
+    match = specifierRegex.exec(format)
+  ) {
     const specifier = match[1];
 
     if (specifier === "%") {

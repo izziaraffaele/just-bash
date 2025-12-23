@@ -14,8 +14,8 @@
     "lint:fix": "biome check --write .",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:unit": "vitest run --exclude='**/comparison/**'",
-    "test:comparison": "vitest run src/comparison",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:comparison": "vitest run --config vitest.comparison.config.ts",
     "shell": "npx tsx src/cli/shell.ts"
   },
   "keywords": [],
