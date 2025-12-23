@@ -91,27 +91,6 @@ const finished = await cmd.wait();
 console.log(finished.exitCode); // 0
 ```
 
-#### BashEnv-Specific Extensions
-
-The Sandbox wrapper supports additional options not in the Vercel Sandbox API:
-
-```typescript
-const sandbox = await Sandbox.create({
-  // Standard options
-  cwd: "/app",
-  env: { NODE_ENV: "test" },
-
-  // BashEnv-specific extensions
-  fs: customFileSystem, // Custom IFileSystem implementation
-  maxCallDepth: 50, // Limit recursion depth (default: 100)
-  maxCommandCount: 1000, // Limit commands per exec (default: 10000)
-  maxLoopIterations: 500, // Limit loop iterations (default: 10000)
-});
-
-// Access underlying BashEnv for advanced operations
-const bashEnv = sandbox.bashEnvInstance;
-```
-
 ### Interactive Shell
 
 ```bash
