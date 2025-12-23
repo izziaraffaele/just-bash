@@ -65,3 +65,118 @@ Build a class BashEnv that represents a fully simulated bash environment, but wi
 - Make the virtual file system default to putting files into `/home/user` if they are relative.
   - Document
 - Add additional bash features (if statements, maybe functions if it is not too hard)
+
+## Implementation phase 8
+
+- Add support for the local keyword
+- Add a new set of tests that try to exercise edge cases in the parser
+
+## Implementation phase 9
+
+- Refactor tests to be more, shorter files named after sub-area they exercise (per new AGENTS.md instruction)
+- Add support for bash loops
+- Add protection against endless execution (stack overrun, endless recursion, endless loops)
+- Add tests for parse errors and behavior
+- Add more parser edge cases and xargs, etc. advanced usage
+
+Ensure we fully support this list from ChatGPT:
+
+Navigation & files
+
+ls — list files and directories
+
+cd — change directory
+
+pwd — show current directory
+
+tree — recursive directory view (often installed separately)
+
+File operations
+
+cp — copy files/directories
+
+mv — move or rename
+
+rm — delete files/directories
+
+mkdir — create directories
+
+touch — create empty files / update timestamps
+
+Viewing & inspecting files
+
+cat — print file contents
+
+less/more — paginated file viewer ()
+
+head / tail — first/last lines
+
+wc — line/word/byte counts
+
+stat — detailed file metadata
+
+Search & text processing
+
+grep — search text with patterns
+
+find — search files by name/criteria
+
+sed — stream editor (search/replace)
+
+awk — column-based text processing
+
+sort / uniq — ordering and deduplication
+
+cut — extract columns
+
+tr — character translation
+
+Permissions & ownership
+
+chmod — change permissions
+
+chown — change owner
+
+chgrp — change group
+
+Processes & system
+
+ps - Mock only
+
+top / htop — Mock only
+
+kill — Mock only
+
+uptime — system runtime/load
+
+df — disk usage Mock
+
+du — directory sizes
+
+free — memory usage Mock
+
+Shell & environment
+
+echo — print text/vars
+
+env — list environment variables
+
+export — set env vars
+
+alias — command shortcuts
+
+history — command history
+
+clear — clear terminal
+
+Redirection & composition (used constantly)
+
+| — pipe output
+
+> / >> — redirect output
+
+< — redirect input
+
+&& / || — conditional chaining
+
+xargs — build argument lists

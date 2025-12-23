@@ -124,10 +124,20 @@ export class ShellParser {
       }
 
       // Handle variable expansion (not in single quotes)
+      // Note: We preserve $VAR syntax here and expand later in execution
+      // This allows commands like "local x=1; echo $x" to work correctly
       if (char === '$' && inQuote !== "'") {
-        const { value, endIndex } = this.expandVariable(input, i);
-        current += value;
-        i = endIndex;
+        // In double quotes, we still need to expand to handle ${VAR:-default} etc.
+        // But for simple $VAR, preserve for later expansion
+        if (inQuote === '"') {
+          const { value, endIndex } = this.expandVariable(input, i);
+          current += value;
+          i = endIndex;
+          continue;
+        }
+        // Outside quotes, preserve the $ for later expansion
+        current += char;
+        i++;
         continue;
       }
 

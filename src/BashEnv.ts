@@ -61,6 +61,8 @@ export class BashEnv {
   private previousDir: string = '/home/user';
   private parser: ShellParser;
   private useDefaultLayout: boolean = false;
+  // Stack of local variable scopes for function calls
+  private localScopes: Map<string, string | undefined>[] = [];
 
   constructor(options: BashEnvOptions = {}) {
     // Use provided filesystem or create a new VirtualFs
@@ -431,32 +433,54 @@ export class BashEnv {
       return this.executeIfStatement(command);
     }
 
+    // Expand variables in command and args at execution time
+    // Only expand unquoted args - single-quoted args are literal, double-quoted are already expanded at parse time
+    const expandedCommand = this.expandVariables(command);
+    const varExpandedArgs = args.map((arg, i) => quotedArgs[i] ? arg : this.expandVariables(arg));
+
     // Create glob expander for this execution
     const globExpander = new GlobExpander(this.fs, this.cwd);
 
     // Expand glob patterns in arguments (skip quoted args)
-    const expandedArgs = await globExpander.expandArgs(args, quotedArgs);
+    const expandedArgs = await globExpander.expandArgs(varExpandedArgs, quotedArgs);
 
     // Handle built-in commands that modify shell state
-    if (command === 'cd') {
+    if (expandedCommand === 'cd') {
       return this.handleCd(expandedArgs);
     }
-    if (command === 'export') {
+    if (expandedCommand === 'export') {
       return this.handleExport(expandedArgs);
     }
-    if (command === 'unset') {
+    if (expandedCommand === 'unset') {
       return this.handleUnset(expandedArgs);
     }
-    if (command === 'exit') {
+    if (expandedCommand === 'exit') {
       const code = expandedArgs[0] ? parseInt(expandedArgs[0], 10) : 0;
       return { stdout: '', stderr: '', exitCode: isNaN(code) ? 1 : code };
     }
+    if (expandedCommand === 'local') {
+      return this.handleLocal(expandedArgs);
+    }
+
+    // Handle variable assignment: VAR=value (no args, command contains =)
+    if (expandedArgs.length === 0 && expandedCommand.includes('=')) {
+      const eqIndex = expandedCommand.indexOf('=');
+      const varName = expandedCommand.slice(0, eqIndex);
+      // Check if it's a valid variable name
+      if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) {
+        const value = expandedCommand.slice(eqIndex + 1);
+        this.env[varName] = value;
+        return { stdout: '', stderr: '', exitCode: 0 };
+      }
+    }
 
     // Check for user-defined functions first
-    const funcBody = this.functions.get(command);
+    const funcBody = this.functions.get(expandedCommand);
     if (funcBody) {
+      // Push a new local scope for this function call
+      this.localScopes.push(new Map());
+
       // Set positional parameters ($1, $2, etc.)
-      const savedEnv = { ...this.env };
       for (let i = 0; i < expandedArgs.length; i++) {
         this.env[String(i + 1)] = expandedArgs[i];
       }
@@ -466,7 +490,17 @@ export class BashEnv {
       // Execute the function body
       const result = await this.exec(funcBody);
 
-      // Restore environment (but keep any exports)
+      // Pop the local scope and restore shadowed variables
+      const localScope = this.localScopes.pop()!;
+      for (const [varName, originalValue] of localScope) {
+        if (originalValue === undefined) {
+          delete this.env[varName];
+        } else {
+          this.env[varName] = originalValue;
+        }
+      }
+
+      // Clean up positional parameters
       for (let i = 1; i <= expandedArgs.length; i++) {
         delete this.env[String(i)];
       }
@@ -477,16 +511,16 @@ export class BashEnv {
     }
 
     // Look up command - handle paths like /bin/ls
-    let commandName = command;
-    if (command.includes('/')) {
+    let commandName = expandedCommand;
+    if (expandedCommand.includes('/')) {
       // Extract the command name from the path
-      commandName = command.split('/').pop() || command;
+      commandName = expandedCommand.split('/').pop() || expandedCommand;
     }
     const cmd = this.commands.get(commandName);
     if (!cmd) {
       return {
         stdout: '',
-        stderr: `bash: ${command}: command not found\n`,
+        stderr: `bash: ${expandedCommand}: command not found\n`,
         exitCode: 127,
       };
     }
@@ -602,8 +636,118 @@ export class BashEnv {
     return { stdout: '', stderr: '', exitCode: 0 };
   }
 
+  private handleLocal(args: string[]): ExecResult {
+    // 'local' is only valid inside a function
+    if (this.localScopes.length === 0) {
+      return {
+        stdout: '',
+        stderr: 'bash: local: can only be used in a function\n',
+        exitCode: 1,
+      };
+    }
+
+    const currentScope = this.localScopes[this.localScopes.length - 1];
+
+    for (const arg of args) {
+      const eqIndex = arg.indexOf('=');
+      let varName: string;
+      let value: string | undefined;
+
+      if (eqIndex > 0) {
+        varName = arg.slice(0, eqIndex);
+        value = arg.slice(eqIndex + 1);
+      } else {
+        varName = arg;
+        value = undefined;
+      }
+
+      // Save the original value (or undefined if it didn't exist)
+      // Only save if we haven't already saved it in this scope
+      if (!currentScope.has(varName)) {
+        currentScope.set(varName, this.env[varName]);
+      }
+
+      // Set the new value
+      if (value !== undefined) {
+        this.env[varName] = value;
+      } else if (!(varName in this.env)) {
+        // If no value and variable doesn't exist, set to empty string
+        this.env[varName] = '';
+      }
+    }
+
+    return { stdout: '', stderr: '', exitCode: 0 };
+  }
+
   private resolvePath(path: string): string {
     return this.fs.resolvePath(this.cwd, path);
+  }
+
+  /**
+   * Expand variables in a string at execution time
+   */
+  private expandVariables(str: string): string {
+    let result = '';
+    let i = 0;
+
+    while (i < str.length) {
+      if (str[i] === '$' && i + 1 < str.length) {
+        const nextChar = str[i + 1];
+
+        // Handle ${VAR} and ${VAR:-default}
+        if (nextChar === '{') {
+          const closeIndex = str.indexOf('}', i + 2);
+          if (closeIndex !== -1) {
+            const content = str.slice(i + 2, closeIndex);
+            const defaultMatch = content.match(/^([^:]+):-(.*)$/);
+            if (defaultMatch) {
+              const [, varName, defaultValue] = defaultMatch;
+              result += this.env[varName] ?? defaultValue;
+            } else {
+              result += this.env[content] ?? '';
+            }
+            i = closeIndex + 1;
+            continue;
+          }
+        }
+
+        // Handle special variables: $@, $#, $$, $?, $!, $*
+        if ('@#$?!*'.includes(nextChar)) {
+          result += this.env[nextChar] ?? '';
+          i += 2;
+          continue;
+        }
+
+        // Handle positional parameters: $0, $1, $2, ...
+        if (/[0-9]/.test(nextChar)) {
+          result += this.env[nextChar] ?? '';
+          i += 2;
+          continue;
+        }
+
+        // Handle $VAR
+        if (/[A-Za-z_]/.test(nextChar)) {
+          let varName = nextChar;
+          let j = i + 2;
+          while (j < str.length && /[A-Za-z0-9_]/.test(str[j])) {
+            varName += str[j];
+            j++;
+          }
+          result += this.env[varName] ?? '';
+          i = j;
+          continue;
+        }
+
+        // Lone $ or unrecognized pattern
+        result += str[i];
+        i++;
+      } else {
+        result += str[i];
+        i++;
+      }
+    }
+
+    return result;
   }
 
   // Public API for file access
