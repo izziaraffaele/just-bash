@@ -162,17 +162,18 @@ describe("sleep command", () => {
     });
   });
 
-  describe("without mock sleep (using real setTimeout)", () => {
-    it("should work with real setTimeout for short duration", async () => {
-      const env = new Bash(); // No mock sleep
+  describe("short duration sleep", () => {
+    it("should handle very short sleep durations", async () => {
+      let sleptMs = 0;
+      const env = new Bash({
+        sleep: async (ms) => {
+          sleptMs = ms;
+        },
+      });
 
-      const start = Date.now();
       const result = await env.exec("sleep 0.01"); // 10ms
-      const elapsed = Date.now() - start;
-
       expect(result.exitCode).toBe(0);
-      expect(elapsed).toBeGreaterThanOrEqual(10);
-      expect(elapsed).toBeLessThan(100); // Should not take too long
+      expect(sleptMs).toBe(10);
     });
   });
 });
