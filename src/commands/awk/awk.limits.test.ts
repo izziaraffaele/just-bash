@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Bash } from "../../Bash.js";
+import { ExecutionLimitError } from "../../interpreter/errors.js";
 
 /**
  * AWK Execution Limits Tests
@@ -61,8 +62,9 @@ describe("AWK Execution Limits", () => {
         `echo "test" | awk 'function f() { f() } BEGIN { f() }'`,
       );
 
-      expect(result.stderr.length).toBeGreaterThan(0);
-      expect(result.exitCode).not.toBe(0);
+      // Must hit our internal limit, not JS stack overflow
+      expect(result.stderr).toContain("recursion depth exceeded");
+      expect(result.exitCode).toBe(ExecutionLimitError.EXIT_CODE);
     });
 
     it("should protect against mutual recursion", async () => {
@@ -71,8 +73,9 @@ describe("AWK Execution Limits", () => {
         `echo "test" | awk 'function a() { b() } function b() { a() } BEGIN { a() }'`,
       );
 
-      expect(result.stderr.length).toBeGreaterThan(0);
-      expect(result.exitCode).not.toBe(0);
+      // Must hit our internal limit, not JS stack overflow
+      expect(result.stderr).toContain("recursion depth exceeded");
+      expect(result.exitCode).toBe(ExecutionLimitError.EXIT_CODE);
     });
   });
 

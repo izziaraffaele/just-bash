@@ -8,7 +8,8 @@ import type { AwkFunctionDef } from "../ast.js";
 import type { AwkFileSystem, AwkValue } from "./types.js";
 
 const DEFAULT_MAX_ITERATIONS = 10000;
-const DEFAULT_MAX_RECURSION_DEPTH = 1000;
+// Keep low to prevent JS stack overflow (each AWK call uses ~10-20 JS stack frames)
+const DEFAULT_MAX_RECURSION_DEPTH = 100;
 
 export interface AwkRuntimeContext {
   // Built-in variables

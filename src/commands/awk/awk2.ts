@@ -4,6 +4,7 @@
  * This is the new implementation using proper lexer/parser/interpreter architecture.
  */
 
+import { ExecutionLimitError } from "../../interpreter/errors.js";
 import type { Command, CommandContext, ExecResult } from "../../types.js";
 import { hasHelpFlag, showHelp, unknownOption } from "../help.js";
 import type { AwkProgram } from "./ast.js";
@@ -201,12 +202,14 @@ export const awkCommand2: Command = {
         exitCode: interp.getExitCode(),
       };
     } catch (e) {
-      // Handle file I/O errors during execution
+      // Handle errors during execution
       const msg = e instanceof Error ? e.message : String(e);
+      const exitCode =
+        e instanceof ExecutionLimitError ? ExecutionLimitError.EXIT_CODE : 2;
       return {
         stdout: interp.getOutput(),
         stderr: `awk: ${msg}\n`,
-        exitCode: 2,
+        exitCode,
       };
     }
   },
