@@ -196,6 +196,7 @@ echo DONE
 ## OK dash status: 2
 
 #### Redirect to file descriptor that's not open
+## SKIP: /proc filesystem not available
 # Notes:
 # - 7/2021: descriptor 7 seems to work on all CI systems.  The process state
 #   isn't clean, but we could probably close it in OSH?
@@ -284,6 +285,7 @@ STDERR
 ## N-I dash status: 1
 
 #### >&word redirects stdout and stderr when word is not a number or -
+## SKIP: stdout_stderr.py test helper not available
 
 # dash, mksh don't implement this bash behaviour.
 case $SH in dash|mksh) exit 1 ;; esac

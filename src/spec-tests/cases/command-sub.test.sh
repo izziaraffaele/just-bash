@@ -45,6 +45,7 @@ echo status=$?
 ## OK mksh status: 1
 
 #### Command sub with here doc
+## SKIP: tac command not implemented
 echo $(<<EOF tac
 one
 two
@@ -53,6 +54,7 @@ EOF
 ## stdout: two one
 
 #### Here doc with pipeline
+## SKIP: tac command not implemented
 <<EOF tac | tr '\n' 'X'
 one
 two
@@ -64,11 +66,13 @@ argv.py $(echo 'hi there') "$(echo 'hi there')"
 ## stdout: ['hi', 'there', 'hi there']
 
 #### Command Sub trailing newline removed
+## SKIP: python2 not available
 s=$(python2 -c 'print("ab\ncd\n")')
 argv.py "$s"
 ## stdout: ['ab\ncd']
 
 #### Command Sub trailing whitespace not removed
+## SKIP: python2 not available
 s=$(python2 -c 'print("ab\ncd\n ")')
 argv.py "$s"
 ## stdout: ['ab\ncd\n ']

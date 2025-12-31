@@ -16,6 +16,7 @@ echo 'to stderr'
 ## stderr: to stderr
 
 #### exec builtin with here doc
+## SKIP: Test data directory not available
 # This has in a separate file because both code and data can be read from
 # stdin.
 $SH $REPO_ROOT/spec/bin/builtins-exec-here-doc-helper.sh
@@ -240,7 +241,6 @@ failure that was expected
 
 
 #### ulimit doesn't accept multiple flags - reduce confusion between shells
-## SKIP: which command not implemented
 
 # - bash, zsh, busybox ash accept multiple "commands", which requires custom
 #   flag parsing, like
@@ -481,7 +481,6 @@ ERROR: echo failed with status 1
 ## END
 
 #### write big file with ulimit
-## SKIP: which command not implemented
 
 # I think this will test write() errors, rather than the final flush() error
 # (which is currently skipped by C++

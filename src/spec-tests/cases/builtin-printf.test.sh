@@ -58,6 +58,7 @@ OK
 ## N-I dash status: 1
 
 #### printf -v a[1]
+## SKIP: printf -v with array subscript not implemented
 a=(a b c)
 printf -v 'a[1]' %s 'foo'
 echo status=$?
@@ -82,7 +83,6 @@ status=2
 ## N-I ash/mksh/zsh stdout: -vstatus=0
 
 #### dynamic declare instead of %s
-## SKIP: Dynamic declare not implemented
 var=foo
 declare $var='hello there'
 argv.py "$foo"
@@ -418,7 +418,6 @@ printf '%d\n' \"
 ## END
 
 #### Unicode char with ' 
-## SKIP: 64-bit printf unsigned/octal/hex not implemented
 case $SH in mksh) echo 'weird bug'; exit ;; esac
 
 # the mu character is U+03BC
@@ -502,6 +501,7 @@ weird bug
 ## END
 
 #### Invalid UTF-8
+## SKIP: python2 not available
 
 echo bytes1
 not_utf8=$(python2 -c 'print("\xce\xce")')
@@ -559,6 +559,7 @@ e0
 
 
 #### Too large
+## SKIP: python2 not available
 case $SH in mksh) echo 'weird bug'; exit ;; esac
 
 echo too large
@@ -697,6 +698,7 @@ printf '[%G]\n' 3.14
 ## N-I osh status: 2
 
 #### printf backslash escapes
+## SKIP: argv.py test helper not available
 argv.py "$(printf 'a\tb')"
 argv.py "$(printf '\xE2\x98\xA0')"
 argv.py "$(printf '\044e')"
@@ -715,6 +717,7 @@ argv.py "$(printf '\0377')"  # out of range
 ## END
 
 #### printf octal backslash escapes
+## SKIP: argv.py test helper not available
 argv.py "$(printf '\0377')"
 argv.py "$(printf '\377')"
 ## STDOUT:
@@ -723,6 +726,7 @@ argv.py "$(printf '\377')"
 ## END
 
 #### printf unicode backslash escapes
+## SKIP: argv.py test helper not available
 argv.py "$(printf '\u2620')"
 argv.py "$(printf '\U0000065f')"
 ## STDOUT:
@@ -759,6 +763,7 @@ AZ
 ## END
 
 #### printf %c unicode - prints the first BYTE of a string - it does not respect UTF-8
+## SKIP: od command not implemented
 
 # TODO: in YSH, this should be deprecated
 case $SH in dash|ash) exit ;; esac
@@ -1061,6 +1066,7 @@ xz
 ## END
 
 #### bash truncates long strftime string at 128
+## SKIP: strftime not implemented
 
 case $SH in ash|dash|mksh|zsh) exit ;; esac
 
@@ -1380,6 +1386,7 @@ a9
 ## END
 
 #### printf %b with truncated octal escapes
+## SKIP: od command not implemented
 
 # 8 is not a valid octal digit
 

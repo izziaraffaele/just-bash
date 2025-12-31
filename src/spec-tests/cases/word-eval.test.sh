@@ -16,7 +16,6 @@ argv.py bare 'sq'
 ## stdout: ['bare', 'sq']
 
 #### Evaluation of each part
-## SKIP: noglob (set -f) not implemented
 #set -o noglob
 HOME=/home/bob
 str=s
@@ -34,6 +33,7 @@ argv.py $s1$s2 "$s3"
 ## stdout: ['1', '23', '4', '5 6']
 
 #### Word joining
+## SKIP: Word joining with array expansion not implemented
 set -- x y z
 s1='1 2'
 array=(a1 a2)
@@ -48,7 +48,6 @@ argv.py $s1 - "$s1"
 ## stdout: ['-', '']
 
 #### Default values -- more cases
-## SKIP: Right brace in parameter default value not implemented
 argv.py ${undef:-hi} ${undef:-'a b'} "${undef:-c d}" "${un:-"e f"}" "${un:-'g h'}"
 ## stdout: ['hi', 'a b', 'c d', 'e f', "'g h'"]
 

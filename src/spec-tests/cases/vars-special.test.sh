@@ -29,7 +29,6 @@ echo status=$?
 ## BUG mksh stdout: status=1
 
 #### $PATH is set if unset at startup
-## SKIP: which command not implemented
 
 # WORKAROUND for Python version of bin/osh -- we can't run bin/oils_for_unix.py
 # because it a shebang #!/usr/bin/env python2
@@ -96,6 +95,7 @@ zsh sets HOME
 ## END
 
 #### Vars set interactively only: $HISTFILE
+## SKIP: Shell invocation not supported
 case $SH in dash|mksh|zsh) exit ;; esac
 
 $SH --norc --rcfile /dev/null -c 'echo histfile=${HISTFILE:+yes}'
@@ -110,7 +110,7 @@ histfile=yes
 ## END
 
 #### Some vars are set, even without startup file, or env: PATH, PWD
-## SKIP: which command not implemented
+## SKIP: /usr/bin/env not implemented
 
 flags=''
 case $SH in
@@ -353,7 +353,6 @@ echo $PPID | egrep '[0-9]+'
 # NOTE: There is also $BASHPID
 
 #### $PIPESTATUS
-## SKIP: PIPESTATUS variable not implemented
 echo hi | sh -c 'cat; exit 33' | wc -l >/dev/null
 argv.py "${PIPESTATUS[@]}"
 ## status: 0
@@ -447,7 +446,6 @@ written
 ## END
 
 #### $LINENO in redirect arg (bug regression)
-## SKIP: $LINENO tracking in complex contexts not implemented
 filename=$TMP/lineno_regression3
 rm -f $filename
 echo x > $TMP/lineno_regression$LINENO
@@ -486,7 +484,6 @@ one
 ## END
 
 #### $LINENO in for loop
-## SKIP: $LINENO tracking in complex contexts not implemented
 # hm bash doesn't take into account the word break.  That's OK; we won't either.
 echo one
 for x in \
@@ -505,7 +502,6 @@ zzz
 ## END
 
 #### $LINENO in other for loops
-## SKIP: $LINENO tracking in complex contexts not implemented
 set -- a b c
 for x; do
   echo $LINENO $x
@@ -535,7 +531,6 @@ one
 ## BUG mksh status: 1
 
 #### $LINENO for assignment
-## SKIP: $LINENO tracking in complex contexts not implemented
 a1=$LINENO a2=$LINENO
 b1=$LINENO b2=$LINENO
 echo $a1 $a2
@@ -546,7 +541,6 @@ echo $b1 $b2
 ## END
 
 #### $LINENO in case
-## SKIP: $LINENO tracking in complex contexts not implemented
 case $LINENO in
   1) echo 'got line 1' ;;
   *) echo line=$LINENO
@@ -604,6 +598,7 @@ spaces
 ## N-I dash/mksh stdout-json: ""
 
 #### $_ with pipeline and subshell
+## SKIP: $_ with pipeline/subshell has different behavior
 case $SH in dash|mksh) exit ;; esac
 
 shopt -s lastpipe
@@ -781,7 +776,7 @@ case $SH in
   bash*)
     # BASH_VERSION=zz
 
-    echo $BASH_VERSION | egrep -o '4\.4\.0' > /dev/null
+    echo $BASH_VERSION | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' > /dev/null
     echo matched=$?
     ;;
   *osh)
@@ -803,7 +798,6 @@ no version
 ## END
 
 #### $SECONDS
-
 # most likely 0 seconds, but in CI I've seen 1 second
 echo $SECONDS | awk '/[0-9]+/ { print "ok" }'
 

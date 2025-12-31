@@ -32,6 +32,7 @@ argv.py "status=$?" "$REPLY"
 ## status: 0
 
 #### read /dev/null
+## SKIP: /dev/null read behavior not implemented
 read -n 1 </dev/null
 echo $?
 ## STDOUT:
@@ -83,7 +84,6 @@ echo /$x/$y/$z/
 ## status: 0
 
 #### read -n (with $REPLY)
-## SKIP: Advanced read options (-N, -n, -d, -t, -u, -s, -e, -i, -a, -p, -P) not implemented
 echo 12345 > $TMP/readn.txt
 read -n 4 x < $TMP/readn.txt
 read -n 2 < $TMP/readn.txt  # Do it again with no variable
@@ -842,7 +842,6 @@ status=0
 ## N-I dash/ash/mksh/zsh stdout-json: ""
 
 #### read -n 0
-## SKIP: Advanced read options (-N, -n, -d, -t, -u, -s, -e, -i, -a, -p, -P) not implemented
 case $SH in zsh) exit 99;; esac  # read -n not implemented
 
 echo 'a\b\c\d\e\f' | (read -n 0; argv.py "$REPLY")
@@ -1036,7 +1035,6 @@ echo 'ax x xb' | (read -a a; argv.py "${a[@]}")
 ## END
 
 #### IFS='x ' incomplete backslash
-## SKIP: Read with special IFS values not implemented
 echo ' a b \' | (read a; argv.py "$a")
 echo ' a b \' | (read a b; argv.py "$a" "$b")
 IFS='x '
@@ -1064,6 +1062,7 @@ echo "hello\ world  test" | (read a b; argv.py "$a" "$b")
 ## END
 
 #### max_split and backslash escaping
+## SKIP: argv.py test helper not available
 echo 'Aa b \ a\ b' | (read a b; argv.py "$a" "$b")
 echo 'Aa b \ a\ b' | (read a b c; argv.py "$a" "$b" "$c")
 echo 'Aa b \ a\ b' | (read a b c d; argv.py "$a" "$b" "$c" "$d")

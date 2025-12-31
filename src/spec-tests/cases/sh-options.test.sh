@@ -553,7 +553,6 @@ shopt -u strict_argv
 ## END
 
 #### shopt allows for backward compatibility like bash
-## SKIP: which command not implemented
 
 # doesn't have to be on, but just for testing
 set -o errexit

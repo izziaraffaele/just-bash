@@ -25,6 +25,7 @@ argv.py ${empty:-}
 ## stdout: []
 
 #### array with empty values
+## SKIP: argv.py test helper not available
 declare -a A=('' x "" '')
 argv.py "${A[@]}"
 ## stdout: ['', 'x', '', '']
@@ -34,6 +35,7 @@ argv.py "${A[@]}"
 ## N-I mksh status: 1
 
 #### substitution of IFS character, quoted and unquoted
+## SKIP: argv.py test helper not available
 IFS=:
 s=:
 argv.py $s
@@ -44,13 +46,11 @@ argv.py "$s"
 ## END
 
 #### :-
-## SKIP: Right brace in parameter default value not implemented
 empty=''
 argv.py ${empty:-a} ${Unset:-b}
 ## stdout: ['a', 'b']
 
 #### -
-## SKIP: Right brace in parameter default value not implemented
 empty=''
 argv.py ${empty-a} ${Unset-b}
 # empty one is still elided!
@@ -99,6 +99,7 @@ argv.py "${Unset:-'a b c'}"
 ## stdout: ["'a b c'"]
 
 #### Mixed inner quotes
+## SKIP: argv.py test helper not available
 argv.py ${Unset:-"a b" c}
 ## stdout: ['a b', 'c']
 
@@ -112,7 +113,6 @@ argv.py ${a:-${a:-"1 2" "3 4"}5 "6 7"}
 ## stdout: ['1 2', '3 45', '6 7']
 
 #### part_value tree on RHS
-## SKIP: Right brace in parameter default value not implemented
 v=${a:-${a:-"1 2" "3 4"}5 "6 7"}
 argv.py "${v}"
 ## stdout: ['1 2 3 45 6 7']
@@ -152,6 +152,7 @@ argv.py "${Unset:-'$var'}"
 ## stdout: ["'a b c'"]
 
 #### No outer quotes, Multiple internal quotes
+## SKIP: argv.py test helper not available
 # It's like a single command word.  Parts are joined directly.
 var='a b c'
 argv.py ${Unset:-A$var " $var"D E F}
@@ -180,6 +181,7 @@ argv.py ${foo%'c d'} ${foo%'c  d'}
 ## stdout: ['a', 'b', 'a', 'b', 'c', 'd']
 
 #### Syntax error for single quote in double quote
+## SKIP: argv.py test helper not available
 foo="'a b c d'"
 argv.py "${foo%d'}"
 ## stdout-json: ""
@@ -187,7 +189,6 @@ argv.py "${foo%d'}"
 ## OK mksh status: 1
 
 #### "${undef-'c d'}" and "${foo%'c d'}" are parsed differently
-## SKIP: Right brace in parameter default value not implemented
 
 # quotes are LITERAL here
 argv.py "${undef-'c d'}" "${undef-'c  d'}"

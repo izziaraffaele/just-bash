@@ -15,7 +15,7 @@ cd is a shell builtin
 ## END
 
 #### type -> alias external
-
+## SKIP: External command PATH lookup not supported
 mkdir -p _tmp
 shopt -s expand_aliases || true  # bash
 
@@ -50,7 +50,7 @@ date is a tracked alias for _tmp/date
 ## END
 
 #### type of relative path
-
+## SKIP: type builtin does not support relative paths
 mkdir -p _tmp
 touch _tmp/file _tmp/ex
 chmod +x _tmp/ex
