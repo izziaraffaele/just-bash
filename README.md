@@ -365,6 +365,16 @@ pnpm build       # Build TypeScript
 pnpm shell       # Run interactive shell
 ```
 
+## AI Agent Instructions
+
+For AI agents working with just-bash, additional guidance is available in `AGENTS.md`:
+
+```bash
+cat node_modules/just-bash/dist/AGENTS.md
+```
+
+This file contains quick reference patterns, common pitfalls, and debugging tips specifically for AI agents.
+
 ## License
 
 Apache-2.0

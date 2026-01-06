@@ -1,24 +1,45 @@
 /**
- * README validation tests
+ * README and AGENTS.md validation tests
  *
- * Ensures the README.md stays in sync with the actual codebase:
+ * Ensures documentation stays in sync with the actual codebase:
  * 1. Command list is complete and accurate
  * 2. TypeScript examples compile correctly
+ * 3. Bash examples execute correctly
  */
 
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
+import { Bash } from "./Bash.js";
 import {
   getCommandNames,
   getNetworkCommandNames,
 } from "./commands/registry.js";
 
 const README_PATH = path.join(import.meta.dirname, "..", "README.md");
+const AGENTS_PATH = path.join(import.meta.dirname, "..", "AGENTS.npm.md");
 
 function parseReadme(): string {
   return fs.readFileSync(README_PATH, "utf-8");
+}
+
+function parseAgents(): string {
+  return fs.readFileSync(AGENTS_PATH, "utf-8");
+}
+
+/**
+ * Extract bash code blocks from markdown
+ */
+function extractBashBlocks(content: string): string[] {
+  const blocks: string[] = [];
+  const pattern = /```bash\n([\s\S]*?)```/g;
+
+  for (const match of content.matchAll(pattern)) {
+    blocks.push(match[1]);
+  }
+
+  return blocks;
 }
 
 /**
@@ -308,5 +329,168 @@ describe("README validation", () => {
         }
       },
     );
+  });
+});
+
+describe("AGENTS.npm.md validation", () => {
+  describe("TypeScript examples", () => {
+    it("should have TypeScript code blocks", () => {
+      const agents = parseAgents();
+      const blocks = extractTypeScriptBlocks(agents);
+
+      // AGENTS.md should have at least one TypeScript example
+      expect(blocks.length).toBeGreaterThan(0);
+    });
+
+    it(
+      "should have valid TypeScript syntax in all examples",
+      { timeout: 30000 },
+      () => {
+        const agents = parseAgents();
+        const blocks = extractTypeScriptBlocks(agents);
+
+        if (blocks.length === 0) return;
+
+        // Create a temp directory for type checking
+        const tmpDir = path.join(import.meta.dirname, "..", ".agents-test-tmp");
+        fs.mkdirSync(tmpDir, { recursive: true });
+
+        try {
+          // Write all blocks to files
+          const files: string[] = [];
+          for (let i = 0; i < blocks.length; i++) {
+            const code = addImpliedImports(blocks[i]);
+            const filePath = path.join(tmpDir, `example-${i}.ts`);
+            fs.writeFileSync(filePath, code);
+            files.push(filePath);
+          }
+
+          // Create a tsconfig for type checking
+          const tsconfig = {
+            compilerOptions: {
+              target: "ES2022",
+              module: "NodeNext",
+              moduleResolution: "NodeNext",
+              strict: true,
+              skipLibCheck: true,
+              noEmit: true,
+              esModuleInterop: true,
+              allowSyntheticDefaultImports: true,
+              resolveJsonModule: true,
+              paths: {
+                "just-bash": [
+                  path.join(import.meta.dirname, "..", "src/index.ts"),
+                ],
+                "just-bash/ai": [
+                  path.join(import.meta.dirname, "..", "src/ai/index.ts"),
+                ],
+                "just-bash/fs/overlay-fs": [
+                  path.join(
+                    import.meta.dirname,
+                    "..",
+                    "src/fs/overlay-fs/index.ts",
+                  ),
+                ],
+                "just-bash/fs/read-write-fs": [
+                  path.join(
+                    import.meta.dirname,
+                    "..",
+                    "src/fs/read-write-fs/index.ts",
+                  ),
+                ],
+              },
+            },
+            include: files,
+          };
+          fs.writeFileSync(
+            path.join(tmpDir, "tsconfig.json"),
+            JSON.stringify(tsconfig, null, 2),
+          );
+
+          // Run tsc to check types
+          try {
+            execSync("npx tsc --project tsconfig.json", {
+              cwd: tmpDir,
+              encoding: "utf-8",
+              stdio: "pipe",
+            });
+          } catch (error) {
+            const execError = error as { stdout?: string; stderr?: string };
+            const output = execError.stdout || execError.stderr || "";
+
+            // Parse errors to show which example failed
+            const errorLines = output
+              .split("\n")
+              .filter((line) => line.includes("error TS"));
+
+            if (errorLines.length > 0) {
+              expect.fail(
+                `TypeScript errors in AGENTS.npm.md examples:\n${errorLines.slice(0, 10).join("\n")}` +
+                  (errorLines.length > 10
+                    ? `\n... and ${errorLines.length - 10} more`
+                    : ""),
+              );
+            }
+          }
+        } finally {
+          // Cleanup
+          fs.rmSync(tmpDir, { recursive: true, force: true });
+        }
+      },
+    );
+  });
+
+  describe("Bash examples", () => {
+    it("should have bash code blocks", () => {
+      const agents = parseAgents();
+      const blocks = extractBashBlocks(agents);
+
+      // AGENTS.md should have bash examples
+      expect(blocks.length).toBeGreaterThan(0);
+    });
+
+    it("should execute bash examples without errors", async () => {
+      const agents = parseAgents();
+      const blocks = extractBashBlocks(agents);
+
+      // Set up a bash environment with sample data for the examples
+      const bash = new Bash({
+        files: {
+          "/data/input.txt": "hello world\ntest pattern\nfoo bar\n",
+          "/data/data.json":
+            '{"items": [{"name": "a", "active": true}, {"name": "b", "active": false}]}',
+          "/data/data.csv": "name,category,value\nalice,A,10\nbob,B,20\n",
+          "/src/app.ts": "// TODO: implement\nexport const x = 1;",
+          "/src/lib.ts": "// helper\nexport const y = 2;",
+        },
+        cwd: "/data",
+      });
+
+      for (const block of blocks) {
+        // Extract individual commands from the block
+        const commands = block
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith("#"));
+
+        for (const cmd of commands) {
+          // Skip commands that are just comments or empty
+          if (!cmd || cmd.startsWith("#")) continue;
+
+          const result = await bash.exec(cmd);
+
+          // Commands should not have stderr (warnings/errors)
+          // Allow exitCode 1 for grep (no matches) but fail on other errors
+          if (result.exitCode !== 0 && result.exitCode !== 1) {
+            expect.fail(
+              `Bash command failed in AGENTS.npm.md:\n` +
+                `Command: ${cmd}\n` +
+                `Exit code: ${result.exitCode}\n` +
+                `Stderr: ${result.stderr}`,
+            );
+          }
+        }
+      }
+    });
   });
 });

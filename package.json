@@ -49,7 +49,8 @@
     "dist/parser/*.d.ts",
     "dist/sandbox/*.d.ts",
     "dist/utils/*.d.ts",
-    "README.md"
+    "README.md",
+    "dist/AGENTS.md"
   ],
   "bin": {
     "just-bash": "./dist/bin/just-bash.js",
@@ -59,7 +60,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && pnpm build:lib && pnpm build:ai && pnpm build:cli && pnpm build:shell && pnpm build:clean",
+    "build": "rm -rf dist && tsc && pnpm build:lib && pnpm build:ai && pnpm build:cli && pnpm build:shell && pnpm build:clean && sed '1,/^-->/d' AGENTS.npm.md > dist/AGENTS.md",
     "build:clean": "find dist -name '*.test.js' -delete && find dist -name '*.test.d.ts' -delete",
     "build:lib": "esbuild dist/index.js --bundle --splitting --platform=node --format=esm --minify --outdir=dist/bundle --chunk-names=chunks/[name]-[hash] --external:diff --external:minimatch --external:sprintf-js --external:turndown",
     "build:ai": "esbuild dist/ai/index.js --bundle --platform=node --format=esm --minify --outfile=dist/bundle/ai/index.js --external:ai --external:zod --external:diff --external:minimatch --external:sprintf-js --external:turndown",
